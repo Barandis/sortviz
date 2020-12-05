@@ -101,17 +101,21 @@ function bubbleSort(array, ppf = 10) {
   let len = array.length
   let i = 0
   let j = 0
+  let noswaps = true
+  let running = true
 
   return new Promise(resolve => {
     requestAnimationFrame(function update(time) {
       for (let x = 0; x < ppf; x++) {
         if (array[j] > array[j + 1]) {
-          const temp = array[j]
-          array[j] = array[j + 1]
-          array[j + 1] = temp
+          [array[j + 1], array[j]] = [array[j], array[j + 1]]
+          noswaps = false
         }
         j++
+
         if (j >= len) {
+          if (noswaps) running = false
+          noswaps = true
           j = 0
           i++
         }
@@ -119,7 +123,69 @@ function bubbleSort(array, ppf = 10) {
       }
       draw(array)
 
-      if (i < len || j < len) {
+      if (!running || i >= len) {
+        resolve()
+      } else {
+        requestAnimationFrame(update)
+      }
+    })
+  })
+}
+
+function insertionSort(array, ppf = 10) {
+  let i = 1
+  let j = 0
+
+  return new Promise(resolve => {
+    requestAnimationFrame(function update(time) {
+      for (x = 0; x < ppf; x++) {
+        if (array[j + 1] < array[j]) {
+          [array[j + 1], array[j]] = [array[j], array[j + 1]]
+        }
+        j--
+
+        if (j <= -1) {
+          i++
+          if (i >= array.length) break
+          j = i - 1
+        }
+      }
+      draw(array)
+
+      if (i < array.length) {
+        requestAnimationFrame(update)
+      } else {
+        resolve()
+      }
+    })
+  })
+}
+
+function selectionSort(array, ppf = 10) {
+  let i = 0
+  let j = 1
+  let min = 0
+
+  return new Promise(resolve => {
+    requestAnimationFrame(function update(time) {
+      for (let x = 0; x < ppf; x++) {
+        if (array[j] < array[min]) min = j
+        j++
+
+        if (j >= array.length) {
+          if (min !== i) {
+            [array[i], array[min]] = [array[min], array[i]]
+          }
+          i++
+
+          if (i >= array.length) break
+          min = i
+          j = i + 1
+        }
+      }
+      draw(array)
+
+      if (i < array.length) {
         requestAnimationFrame(update)
       } else {
         resolve()
@@ -129,4 +195,10 @@ function bubbleSort(array, ppf = 10) {
 }
 
 init()
-initArray(array, 10).then(() => shuffle(array, 10)).then(() => bubbleSort(array, 1000))
+initArray(array, 10)
+  .then(() => shuffle(array, 10))
+  .then(() => bubbleSort(array, 1000))
+  .then(() => shuffle(array, 10))
+  .then(() => insertionSort(array, 1000))
+  .then(() => shuffle(array, 10))
+  .then(() => selectionSort(array, 1000))
