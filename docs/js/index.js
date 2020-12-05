@@ -200,13 +200,106 @@ function selectionSort(array, ppf = 10) {
   })
 }
 
+function merge(array, start, mid, end, ppf) {
+  let start2 = mid + 1
+
+  return new Promise(resolve => {
+    if (array[mid] <= array[start2]) {
+      resolve()
+    } else {
+      requestAnimationFrame(function update(time) {
+        for (let x = 0; x < ppf; x++) {
+          if (start > mid || start2 > end) break
+
+          if (array[start] <= array[start2]) {
+            start++
+          } else {
+            const value = array[start2]
+            let i = start2
+
+            while (i !== start) {
+              array[i] = array[i - 1]
+              i--
+            }
+            array[start] = value
+
+            start++
+            mid++
+            start2++
+          }
+        }
+        draw(array)
+
+        if (start > mid || start2 > end) {
+          resolve()
+        } else {
+          requestAnimationFrame(update)
+        }
+      })
+    }
+  })
+}
+
+function mergeSort(array, ppf = 10, left = 0, right = array.length - 1) {
+  if (left < right) {
+    const mid = left + Math.floor((right - left) / 2)
+    return mergeSort(array, ppf, left, mid)
+      .then(() => mergeSort(array, ppf, mid + 1, right))
+      .then(() => merge(array, left, mid, right, ppf))
+  }
+  return Promise.resolve()
+}
+
+function partition(array, start, end, ppf) {
+  let pivot = array[start]
+  let swap = start
+  let i = start + 1
+
+  return new Promise(resolve => {
+    requestAnimationFrame(function update(time) {
+      for (let x = 0; x < ppf; x++) {
+        if (array[i] < pivot) {
+          swap++
+          [array[i], array[swap]] = [array[swap], array[i]]
+        }
+        i++
+
+        if (i > end) break
+      }
+      draw(array)
+  
+      if (i <= end) {
+        requestAnimationFrame(update)
+      } else {
+        [array[swap], array[start]] = [array[start], array[swap]]
+        resolve(swap)
+      }
+    })
+  })
+}
+
+function quickSort(array, ppf = 10, left = 0, right = array.length - 1) {
+  if (left < right) {
+    const pa = partition(array, left, right, ppf)
+    const pb = pa.then(pivot => quickSort(array, ppf, left, pivot - 1))
+    return Promise.all([pa, pb]).then(([pivot, _]) => quickSort(array, ppf, pivot + 1, right))
+  }
+  return Promise.resolve()
+}
+
 initCanvas()
 initArray(array, 10)
   .then(() => shuffle(array, 10))
-  .then(() => bubbleSort(array, 1000))
+  .then(() => bubbleSort(array, 1500))
   .then(() => pause(2000))
   .then(() => shuffle(array, 10))
   .then(() => insertionSort(array, 1000))
   .then(() => pause(2000))
   .then(() => shuffle(array, 10))
   .then(() => selectionSort(array, 1000))
+  .then(() => pause(2000))
+  .then(() => shuffle(array, 10))
+  .then(() => mergeSort(array, 10))
+  .then(() => pause(2000))
+  .then(() => shuffle(array, 10))
+  .then(() => quickSort(array, 10))
