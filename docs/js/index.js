@@ -129,4 +129,4 @@ function bubbleSort(array, ppf = 10) {
 }
 
 init()
-initArray(array, 10).then(() => shuffle(array, 10)).then(() => bubbleSort(array, 500))
+initArray(array, 10).then(() => shuffle(array, 10)).then(() => bubbleSort(array, 1000))
