@@ -41,7 +41,13 @@ function draw(array) {
   }
 }
 
-function init(array) {
+function pause(delay) {
+  return new Promise(resolve => {
+    setTimeout(resolve, delay)
+  })
+}
+
+function initCanvas() {
   const canvas = document.getElementById('canvas')
   width = canvas.width
   height = canvas.height
@@ -194,11 +200,13 @@ function selectionSort(array, ppf = 10) {
   })
 }
 
-init()
+initCanvas()
 initArray(array, 10)
   .then(() => shuffle(array, 10))
   .then(() => bubbleSort(array, 1000))
+  .then(() => pause(2000))
   .then(() => shuffle(array, 10))
   .then(() => insertionSort(array, 1000))
+  .then(() => pause(2000))
   .then(() => shuffle(array, 10))
   .then(() => selectionSort(array, 1000))
