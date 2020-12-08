@@ -236,6 +236,44 @@ function *quickSort(array, epf = 10, left = 0, right = array.length - 1) {
   }
 }
 
+let heapLen
+let heapE = 0
+
+function *maxHeap(array, i, epf) {
+  const left = 2 * i + 1
+  const right = 2 * i + 2
+  let max = i
+
+  if (left < heapLen && array[left] > array[max]) max = left
+  if (right < heapLen && array[right] > array[max]) max = right
+  if (max !== i) {
+    [array[i], array[max]] = [array[max], array[i]]
+    if (++heapE >= epf) {
+      heapE = 0
+      yield i
+    }
+    yield *maxHeap(array, max, epf)
+  }
+}
+
+function *heapSort(array, epf = 10) {
+  heapLen = array.length
+
+  for (let i = Math.floor(heapLen / 2); i >= 0; i--) {
+    yield *maxHeap(array, i, epf)
+  }
+
+  for (let i = array.length - 1; i > 0; i--) {
+    [array[0], array[i]] = [array[i], array[0]]
+    if (++heapE >= epf) {
+      heapE = 0
+      yield i
+    }
+    heapLen--
+    yield *maxHeap(array, 0, epf)
+  }
+}
+
 initCanvas()
 execute(initArray, array, 10)
   .then(() => execute(shuffle, array, 10))
@@ -252,3 +290,6 @@ execute(initArray, array, 10)
   .then(() => pause(2000))
   .then(() => execute(shuffle, array, 10))
   .then(() => execute(quickSort, array, 10))
+  .then(() => pause(2000))
+  .then(() => execute(shuffle, array, 10))
+  .then(() => execute(heapSort, array, 20))
