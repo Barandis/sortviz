@@ -31,13 +31,22 @@ function getLocation(value, index, max = elementCount / 2) {
   return { x, y }
 }
 
-function draw(array) {
+function draw(arrays) {
   ctx.clearRect(-width / 2, -height / 2, width, height)
-  for (const [index, value] of array.entries()) {
-    const { x, y } = getLocation(value, index)
-    const color = getColor(value)
-    ctx.fillStyle = color
-    ctx.fillRect(x, y, 1, 1)
+  const drawn = []
+
+  for (const { array, xform } of arrays) {
+    for (const [index, value] of array.entries()) {
+      if (drawn[value]) continue
+      drawn[value] = true
+
+      const { x, y } = getLocation(value, xform(index))
+      const color = getColor(value)
+      ctx.fillStyle = color  
+      ctx.beginPath()
+      ctx.arc(x, y, 1, 0, 2 * Math.PI, false)
+      ctx.fill()
+    }
   }
 }
 
@@ -45,6 +54,10 @@ function pause(delay) {
   return new Promise(resolve => {
     setTimeout(resolve, delay)
   })
+}
+
+function single(array) {
+  return [ { array, xform: x => x }]
 }
 
 function initCanvas() {
@@ -65,16 +78,24 @@ function execute(genFn, array, epf ) {
 
   return new Promise(resolve => {
     requestAnimationFrame(function update(time) {
-      const value = gen.next()
-      draw(array)
+      const { value, done } = gen.next()
 
-      if (value.done) { 
+      if (done) { 
+        draw(single(array))
         resolve() 
       } else {
+        draw(value)
         requestAnimationFrame(update)
       }
     })
   })
+}
+
+function doSort(fn, array, epf) {
+  return pause(2000)
+    .then(() => execute(shuffle, array, 10))
+    .then(() => pause(2000))
+    .then(() => execute(fn, array, epf))
 }
 
 function *initArray(array, epf = 10) {
@@ -84,7 +105,7 @@ function *initArray(array, epf = 10) {
 
     if (++e >= epf) {
       e = 0
-      yield i
+      yield single(array)
     }
   }
 }
@@ -99,7 +120,7 @@ function *shuffle(array, epf = 10) {
 
     if (++e >= epf) {
       e = 0
-      yield i
+      yield single(array)
     }
   }
 }
@@ -116,7 +137,7 @@ function *bubbleSort(array, epf = 10) {
 
       if (++e >= epf) {
         e = 0
-        yield i
+        yield single(array)
       }
     }
   }
@@ -136,7 +157,7 @@ function *insertionSort(array, epf = 10) {
 
       if (++e >= epf) {
         e = 0
-        yield i
+        yield single(array)
       }
     }
     array[j + 1] = key
@@ -154,7 +175,7 @@ function *selectionSort(array, epf = 10) {
 
       if (++e >= epf) {
         e = 0
-        yield i
+        yield single(array)
       }
     }
     [array[i], array[min]] = [array[min], array[i]]
@@ -181,14 +202,14 @@ function *merge(array, start, mid, end, epf) {
 
       if (++e >= epf) {
         e = 0
-        yield i
+        yield single(array)
       }
 
       array[start] = value
 
       if (++e >= epf) {
         e = 0
-        yield i
+        yield single(array)
       }
 
       start++
@@ -221,7 +242,7 @@ function *partition(array, left, right, epf) {
     }
     if (++e >= epf) {
       e = 0
-      yield i
+      yield single(array)
     }
   }
   [array[i + 1], array[right]] = [array[right], array[i + 1]]
@@ -250,7 +271,7 @@ function *maxHeap(array, i, epf) {
     [array[i], array[max]] = [array[max], array[i]]
     if (++heapE >= epf) {
       heapE = 0
-      yield i
+      yield single(array)
     }
     yield *maxHeap(array, max, epf)
   }
@@ -267,29 +288,81 @@ function *heapSort(array, epf = 10) {
     [array[0], array[i]] = [array[i], array[0]]
     if (++heapE >= epf) {
       heapE = 0
-      yield i
+      yield single(array)
     }
     heapLen--
     yield *maxHeap(array, 0, epf)
   }
 }
 
+function *shellSort(array, epf = 10) {
+  const len = array.length
+  let e = 0
+
+  for (let gap = Math.floor(len / 2); gap > 0; gap = Math.floor(gap / 2)) {
+    for (let i = gap; i < len; i++) {
+      const temp = array[i]
+      let j
+
+      for (j = i; j >= gap && array[j - gap] > temp; j -= gap) {
+        array[j] = array[j - gap]
+
+        if (++e >= epf) {
+          e = 0
+          yield single(array)
+        }
+      }
+      array[j] = temp
+    }
+  }
+}
+
+function *sortBucket(bucket, buckets, epf) {
+  const len = bucket.length
+  let e = 0
+
+  for (let i = 1; i < len; i++) {
+    let j
+    const temp = bucket[i]
+
+    for (j = i - 1; j >= 0 && bucket[j] > temp; j--) {
+      bucket[j + 1] = bucket[j]
+      if (++e >= epf) { e = 0; yield buckets}
+    }
+    bucket[j + 1] = temp
+    if (++e >= epf) { e = 0; yield buckets }
+  }
+  return bucket
+}
+
+function *bucketSort(array, epf = 10) {
+  let e = 0
+  const max = Math.max(...array)
+  const min = Math.min(...array)
+  const size = 150
+  const count = Math.floor((max - min) / size) + 1
+  const buckets = Array.from({ length: count }, () => [])
+  const mapped = buckets.map((b, i) => ({ array: b, xform: idx => i * size + idx}))
+
+  for (let i = 0; i < array.length; i++) { 
+    buckets[Math.floor((array[i] - min) / size)].push(array[i]); 
+    if (++e >= epf) { e = 0; yield [...mapped, ...single(array)] }
+  }
+
+  array.length = 0
+  for (const bucket of buckets) {
+    yield *sortBucket(bucket, mapped, epf)
+    array.push(...bucket)
+  }
+}
+
 initCanvas()
 execute(initArray, array, 10)
-  .then(() => execute(shuffle, array, 10))
-  .then(() => execute(bubbleSort, array, 1500))
-  .then(() => pause(2000))
-  .then(() => execute(shuffle, array, 10))
-  .then(() => execute(insertionSort, array, 750))
-  .then(() => pause(2000))
-  .then(() => execute(shuffle, array, 10))
-  .then(() => execute(selectionSort, array, 1250))
-  .then(() => pause(2000))
-  .then(() => execute(shuffle, array, 10))
-  .then(() => execute(mergeSort, array, 10))
-  .then(() => pause(2000))
-  .then(() => execute(shuffle, array, 10))
-  .then(() => execute(quickSort, array, 10))
-  .then(() => pause(2000))
-  .then(() => execute(shuffle, array, 10))
-  .then(() => execute(heapSort, array, 20))
+  .then(() => doSort(bubbleSort, array, 1500))
+  .then(() => doSort(insertionSort, array, 750))
+  .then(() => doSort(selectionSort, array, 1250))
+  .then(() => doSort(heapSort, array, 15))
+  .then(() => doSort(mergeSort, array, 10))
+  .then(() => doSort(shellSort, array, 10))
+  .then(() => doSort(quickSort, array, 10))
+  .then(() => doSort(bucketSort, array, 50))
