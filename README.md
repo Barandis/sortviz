@@ -26,7 +26,7 @@ The sorts represented right now, in order, are
 7. Quick sort
 8. Bucket sort
 
-Each is done with an array of 1500 numbers. They are run at different speeds to keep all of the visualizations fairly close to each other in length; this requires speeding some of the sorts up quite a lot. This is meant to show what a sort looks like, not how fast it is compared to another.
+Each is done with an array of 1500 numbers. They are run at different speeds to keep all of the visualizations fairly close to each other in duration; this requires speeding some of the sorts up quite a lot. This is meant to show what a sort looks like, not how fast it is compared to another.
 
 At the beginning, the circle forms as the array is initialized and filled with numbners, and there is a shuffle before each sort.
 
