@@ -21,10 +21,19 @@
         justify-content: center;
         align-items: center;
       }
+      #label {
+        position: absolute;
+        top: 0;
+        left: 0;
+        font-family: sans-serif;
+        font-size: 36px;
+        color: white;
+      }
     </style>
   </head>
   <body>
     <div id="canvas-wrapper">
+      <div id="label"></div>
       <canvas id="canvas" height="800" width="800"></canvas>
     </div>
     <script src="js/index.js"></script>

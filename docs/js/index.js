@@ -91,11 +91,18 @@ function execute(genFn, array, epf ) {
   })
 }
 
-function doSort(fn, array, epf) {
+function doSort(label, fn, array, epf) {
+  const element = document.getElementById('label')
   return pause(2000)
-    .then(() => execute(shuffle, array, 10))
-    .then(() => pause(2000))
-    .then(() => execute(fn, array, epf))
+    .then(() => {
+      element.innerText = ''
+      return execute(shuffle, array, 10)
+    })
+    .then(() => pause(1000))
+    .then(() => {
+      element.innerText = label
+      return execute(fn, array, epf)
+    })
 }
 
 function *initArray(array, epf = 10) {
@@ -358,11 +365,11 @@ function *bucketSort(array, epf = 10) {
 
 initCanvas()
 execute(initArray, array, 10)
-  .then(() => doSort(bubbleSort, array, 1500))
-  .then(() => doSort(insertionSort, array, 750))
-  .then(() => doSort(selectionSort, array, 1250))
-  .then(() => doSort(heapSort, array, 15))
-  .then(() => doSort(mergeSort, array, 10))
-  .then(() => doSort(shellSort, array, 10))
-  .then(() => doSort(quickSort, array, 10))
-  .then(() => doSort(bucketSort, array, 50))
+  .then(() => doSort('Bubble Sort', bubbleSort, array, 1500))
+  .then(() => doSort('Insertion Sort', insertionSort, array, 750))
+  .then(() => doSort('Selection Sort', selectionSort, array, 1250))
+  .then(() => doSort('Heap Sort', heapSort, array, 15))
+  .then(() => doSort('Merge Sort', mergeSort, array, 10))
+  .then(() => doSort('Shell Sort', shellSort, array, 10))
+  .then(() => doSort('Quick Sort', quickSort, array, 10))
+  .then(() => doSort('Bucket Sort', bucketSort, array, 50))
