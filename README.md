@@ -20,8 +20,11 @@ The sorts represented right now, in order, are
 1. Bubble sort
 2. Insertion sort
 3. Selection sort
-4. Merge sort
-5. Quick sort
+4. Heap sort
+5. Merge sort
+6. Shell sort
+7. Quick sort
+8. Bucket sort
 
 Each is done with an array of 1500 numbers. The first three are sped up considerably; this is meant to visualize the process, not to show how fast a particular sort works.
 
